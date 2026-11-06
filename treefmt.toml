@@ -1,0 +1,6 @@
+[formatter.nixfmt]
+command = "nixfmt"
+options = ["--width=80"]
+includes = ["*.nix"]
+# The fixture is too wide on purpose.  The width check formats it.
+excludes = ["tests/over-width.nix"]

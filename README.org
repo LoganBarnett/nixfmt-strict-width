@@ -1,0 +1,172 @@
+#+title:     nixfmt-strict-width
+#+author:    Logan Barnett
+#+email:     logustus@gmail.com
+#+date:      <2026-11-05 Thu>
+#+language:  en
+#+file_tags:
+#+tags:
+
+nixfmt-strict-width is [[https://github.com/NixOS/nixfmt][nixfmt]]
+patched to honor ~--width~ wherever a line can break.  Stock nixfmt ignores
+the width in several cases.
+
+* Examples
+
+Every example is formatted with ~--width=80~.  Each patch file opens with a
+fuller description of its change.
+
+** A string moves to its own line
+
+Stock nixfmt keeps a string attached to a short name.  This line reaches
+column 84.
+
+#+begin_src nix :exports code
+  {
+    description = "Copies every home directory to the offsite store late each night.";
+  }
+#+end_src
+
+nixfmt-strict-width moves the string below the ~=~ when that makes it fit.
+
+#+begin_src nix :exports code
+  {
+    description =
+      "Copies every home directory to the offsite store late each night.";
+  }
+#+end_src
+
+** A string with no interpolation cannot break
+
+Stock nixfmt leaves this line at column 109.
+
+#+begin_src nix :exports code
+  {
+    description = "Copies every home directory to the offsite store each night and then prunes old snapshots.";
+  }
+#+end_src
+
+nixfmt-strict-width still moves the string below the ~=~.  The line passes
+the width anyway and ends at column 97.
+
+#+begin_src nix :exports code
+  {
+    description =
+      "Copies every home directory to the offsite store each night and then prunes old snapshots.";
+  }
+#+end_src
+
+** A string breaks at an interpolation
+
+Stock nixfmt keeps short interpolations on one line.  This line reaches
+column 110.
+
+#+begin_src nix :exports code
+  {
+    message = "Host ${host.name} claims ${host.address}, which ${owner.name} already holds on ${network.name}.";
+  }
+#+end_src
+
+nixfmt-strict-width treats every interpolation as a possible line break.
+
+#+begin_src nix :exports code
+  {
+    message = "Host ${host.name} claims ${host.address}, which ${
+      owner.name
+    } already holds on ${network.name}.";
+  }
+#+end_src
+
+** Indentation counts toward the width
+
+Stock nixfmt measures only the text after the indentation.  The text here is
+75 columns wide and the line reaches column 83.
+
+#+begin_src nix :exports code
+  {
+    services.backup = {
+      jobs = {
+        home = {
+          paths = lib.filter (path: path.enabled && path.size != null) allKnownPaths;
+        };
+      };
+    };
+  }
+#+end_src
+
+nixfmt-strict-width counts the indentation and wraps the line.
+
+#+begin_src nix :exports code
+  {
+    services.backup = {
+      jobs = {
+        home = {
+          paths = lib.filter (
+            path: path.enabled && path.size != null
+          ) allKnownPaths;
+        };
+      };
+    };
+  }
+#+end_src
+
+** A simple function application wraps
+
+Stock nixfmt forces an application of simple terms onto one line.  This one
+reaches column 82.
+
+#+begin_src nix :exports code
+  {
+    users.users.root.openssh.authorizedKeys.keyFiles =
+      collectAuthorizedKeyFilesFromOtherHosts administratorAccounts currentHostName;
+  }
+#+end_src
+
+nixfmt-strict-width wraps it like any other application.
+
+#+begin_src nix :exports code
+  {
+    users.users.root.openssh.authorizedKeys.keyFiles =
+      collectAuthorizedKeyFilesFromOtherHosts administratorAccounts
+        currentHostName;
+  }
+#+end_src
+
+* Not for nixpkgs
+
+The output differs from what nixpkgs expects.  Format nixpkgs contributions
+with the stock nixfmt.
+
+* Usage
+
+Add the flake as an input and put its package in a dev shell.
+
+#+begin_src nix :exports code
+  {
+    inputs = {
+      nixfmt-strict-width = {
+        url = "github:LoganBarnett/nixfmt-strict-width";
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
+      nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    };
+
+    outputs =
+      { nixfmt-strict-width, nixpkgs, ... }:
+      {
+        devShells.aarch64-darwin.default =
+          nixpkgs.legacyPackages.aarch64-darwin.mkShell {
+            packages = [
+              nixfmt-strict-width.packages.aarch64-darwin.default
+            ];
+          };
+      };
+  }
+#+end_src
+
+The binary is still named ~nixfmt~, so a ~treefmt~ configuration needs no
+change.
+
+* License
+
+nixfmt-strict-width is licensed under MPL-2.0.  The patches modify nixfmt's
+source, so they carry its license.  [[file:LICENSE]] holds the full text.
