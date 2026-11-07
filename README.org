@@ -10,6 +10,13 @@ nixfmt-strict-width is [[https://github.com/NixOS/nixfmt][nixfmt]]
 patched to honor ~--width~ wherever a line can break.  Stock nixfmt ignores
 the width in several cases.
 
+* ~nixfmt~ Contribution
+
+[[https://github.com/NixOS/nixfmt/issues/288][nixfmt#288]] being open and tagged with ~help-wanted~ leaves one with the
+impression that at least some of these changes are amenable to contribution back
+into ~nixfmt~.  This isn't far from a PR but it is doing more than just strictly
+taking out indentation.
+
 * Examples
 
 Every example is formatted with ~--width=80~.  Each patch file opens with a
